@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 # Dummy constants for constraints
 MIN_SIMILARITY_THRESHOLD = 0.5 # Arbitrary threshold for Phase 2 failure
-MAX_PROMPT_TOKENS = 2000 # Size limit of smallest model (Phase 2 constraint)
+MAX_PROMPT_WORDS = 2000 # Size limit of smallest model (Phase 2 constraint)
 
 # Configure terminal output (gray text) and file output
 class GrayFormatter(logging.Formatter):
@@ -250,10 +250,10 @@ def run_pipeline(raw_input: dict, db_path: str = "./my_chromadb") -> Dict[str, A
     # Enforce strict size limits of the smallest AI model (MAX_PROMPT_TOKENS)
     # We use a simple word split for mock tokenization
     prompt_words = raw_prompt.split()
-    if len(prompt_words) > MAX_PROMPT_TOKENS:
-        truncated_count = len(prompt_words) - MAX_PROMPT_TOKENS
-        logger.warning(f"Context overflow risk mitigated! Truncating prompt by {truncated_count} tokens to fit {MAX_PROMPT_TOKENS} limit.")
-        prompt_words = prompt_words[:MAX_PROMPT_TOKENS]
+    if len(prompt_words) > MAX_PROMPT_WORDS:
+        truncated_count = len(prompt_words) - MAX_PROMPT_WORDS
+        logger.warning(f"Context overflow risk mitigated! Truncating prompt by {truncated_count} tokens to fit {MAX_PROMPT_WORDS} limit.")
+        prompt_words = prompt_words[:MAX_PROMPT_WORDS]
         prompt = " ".join(prompt_words)
     else:
         prompt = raw_prompt
