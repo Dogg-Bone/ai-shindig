@@ -47,33 +47,39 @@ class RAGOutput(BaseModel):
         print(f"Total Processing Time: {self.processing_time_ms} ms")
 
 # ==========================================
-# Mock Model Server APIs
+# Real Model Server APIs
 # ==========================================
-def simulate_generation_model(model_name: str, prompt: str) -> Dict[str, Any]:
-    """Simulates a generation API call."""
+import requests
+from tenacity import retry, stop_after_attempt
+
+@retry(stop=stop_after_attempt(3))
+def _call_generation_api(model_name: str, prompt: str) -> Dict[str, Any]:
+    # Assumption: The local server provides an OpenAI-compatible /v1/chat/completions endpoint.
+    url = "http://localhost:8000/v1/chat/completions"
+    payload = {
+        "model": model_name,
+        "messages": [{"role": "user", "content": prompt}]
+    }
+    # Assumption: The server returns a standard OpenAI JSON response:
+    # {"choices": [{"message": {"content": "..."}}], "usage": {"total_tokens": 123}}
+    response = requests.post(url, json=payload, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+def call_generation_model(model_name: str, prompt: str) -> Dict[str, Any]:
+    """Calls a generation API."""
     start_time = time.time()
 
-    # Simulate network/processing latency (0.5 to 1.5 seconds)
-    import random
-    time.sleep(random.uniform(0.5, 1.5))
-
-    # Generate mock responses based on the model
-    if model_name == "Qwen":
-        answer = f"According to the context, here is what I found. (Qwen's detailed answer to the prompt...)"
-    elif model_name == "Llama":
-        answer = f"The documents suggest that... (Llama's concise answer...)"
-    else: # Mistral
-        answer = f"Based on the provided relevance weighted chunks: (Mistral's structured answer...)"
-
-    # Simulate hallucination risk (Failure Point 3)
-    if random.random() < 0.1:
-         answer += " Also, I hallucinated this extra irrelevant fact!"
-         logger.warning(f"Simulated hallucination risk: {model_name} generated potentially unfaithful content.")
+    try:
+        api_response = _call_generation_api(model_name, prompt)
+        answer = api_response.get("choices", [{}])[0].get("message", {}).get("content", "")
+        tokens_used = api_response.get("usage", {}).get("total_tokens", 0)
+    except Exception as e:
+        logger.error(f"Failed to call {model_name} after 3 attempts: {e}")
+        answer = f"Error generating response: {e}"
+        tokens_used = 0
 
     latency = time.time() - start_time
-
-    # Simple mock token counter
-    tokens_used = len(prompt.split()) + len(answer.split())
 
     return {
         "model": model_name,
@@ -82,29 +88,55 @@ def simulate_generation_model(model_name: str, prompt: str) -> Dict[str, Any]:
         "tokens_used": tokens_used
     }
 
-def simulate_arbitrator_phi(prompt: str, model_responses: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+@retry(stop=stop_after_attempt(3))
+def _call_arbitrator_api(prompt: str, model_answer: str) -> Dict[str, Any]:
+    # Assumption: The local server provides an OpenAI-compatible endpoint.
+    url = "http://localhost:8000/v1/chat/completions"
+    arbitrator_prompt = f"Evaluate the following answer to the prompt. Provide a score from 1.0 to 5.0 and reasoning.\nPrompt: {prompt}\nAnswer: {model_answer}"
+    payload = {
+        "model": "Phi",
+        "messages": [{"role": "user", "content": arbitrator_prompt}]
+    }
+    response = requests.post(url, json=payload, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+def call_arbitrator_phi(prompt: str, model_responses: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Simulates Phi acting as an arbitrator.
+    Calls Phi acting as an arbitrator.
     Returns the updated responses list with added 'score' and 'reasoning'.
     """
     start_time = time.time()
-    time.sleep(1.0) # simulate latency
-
-    import random
-
     scored_responses = []
-    for resp in model_responses:
-        # Mock scoring logic
-        if "hallucinated" in resp["answer"]:
-            score = round(random.uniform(1.0, 2.5), 1)
-            reasoning = "Penalized for unfaithfulness/hallucinated content."
-        else:
-            score = round(random.uniform(3.5, 5.0), 1)
-            reasoning = "Answer addresses the prompt and aligns with context."
 
+    for resp in model_responses:
         scored_resp = dict(resp)
-        scored_resp["arbitrator_score"] = score
-        scored_resp["arbitrator_reasoning"] = reasoning
+        try:
+            api_response = _call_arbitrator_api(prompt, resp["answer"])
+            content = api_response.get("choices", [{}])[0].get("message", {}).get("content", "")
+
+            # Assumption: The model will respond with a JSON-like format or plain text that we can extract score from.
+            # For simplicity, we assume a structured text like "Score: 4.5\nReasoning: It is good."
+            # In a real scenario, structured output/JSON mode would be preferred.
+            # Here we parse naively based on assumptions.
+            score = 3.0 # Default score
+            reasoning = content
+
+            if "Score:" in content:
+                try:
+                    score_str = content.split("Score:")[1].split()[0].strip()
+                    score = float(score_str)
+                except Exception as e:
+                    logger.warning(f"Could not parse score from Phi response: {e}")
+
+            scored_resp["arbitrator_score"] = score
+            scored_resp["arbitrator_reasoning"] = reasoning
+
+        except Exception as e:
+            logger.error(f"Failed to call Phi arbitrator after 3 attempts: {e}")
+            scored_resp["arbitrator_score"] = 0.0
+            scored_resp["arbitrator_reasoning"] = f"Error evaluating response: {e}"
+
         scored_responses.append(scored_resp)
 
     latency = time.time() - start_time
@@ -136,12 +168,12 @@ def execute_models_and_arbitrate(prompt: str, metadatas: List[Dict[str, Any]], s
     # Simulating sequential execution of the "simultaneous" models
     model_responses = []
     for model_name in ["Qwen", "Llama", "Mistral"]:
-        resp = simulate_generation_model(model_name, prompt)
+        resp = call_generation_model(model_name, prompt)
         model_responses.append(resp)
         logger.info(f"{model_name} generated response in {resp['latency_sec']:.2f}s (Tokens: {resp['tokens_used']})")
 
     logger.info("Invoking Arbitrator (Phi) to evaluate responses...")
-    scored_responses = simulate_arbitrator_phi(prompt, model_responses)
+    scored_responses = call_arbitrator_phi(prompt, model_responses)
 
     for sr in scored_responses:
         logger.info(f"Arbitrator Score for {sr['model']}: {sr['arbitrator_score']} - Reason: {sr['arbitrator_reasoning']}")
