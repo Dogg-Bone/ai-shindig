@@ -12,21 +12,34 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 # 1. Define global variables so the lifespan manager can load and delete them
 model = None
 tokenizer = None
-MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
+
+MODEL_MAPPING = {
+    "Qwen": "Qwen/Qwen2.5-3B-Instruct",
+    "Llama": "meta-llama/Llama-3.2-3B-Instruct",
+    "Mistral": "mistralai/Ministral-3-3B-Instruct-2512-BF16",
+    "Phi": "nvidia/Phi-4-reasoning-plus-NVFP4"
+}
 
 # 2. Create the lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- STARTUP LOGIC ---
     global model, tokenizer
-    print(f"Loading {MODEL_NAME}...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+
+    model_key = os.environ.get("MODEL_NAME", "Qwen")
+    hf_model_id = MODEL_MAPPING.get(model_key)
+
+    if not hf_model_id:
+        raise ValueError(f"Invalid MODEL_NAME environment variable: {model_key}. Must be one of {list(MODEL_MAPPING.keys())}")
+
+    print(f"Loading {hf_model_id} (Alias: {model_key})...")
+    tokenizer = AutoTokenizer.from_pretrained(hf_model_id)
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME, 
+        hf_model_id,
         torch_dtype=torch.bfloat16,
         device_map="auto"
     )
-    print("Model loaded!")
+    print(f"Model {model_key} loaded!")
     
     yield  # The server runs while yielded here
     

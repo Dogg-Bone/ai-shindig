@@ -52,10 +52,19 @@ class RAGOutput(BaseModel):
 import requests
 from tenacity import retry, stop_after_attempt
 
+# Define ports for each microservice
+PORT_MAPPING = {
+    "Qwen": 8000,
+    "Llama": 8001,
+    "Mistral": 8002,
+    "Phi": 8003
+}
+
 @retry(stop=stop_after_attempt(3))
 def _call_generation_api(model_name: str, prompt: str) -> Dict[str, Any]:
-    # Assumption: The local server provides an OpenAI-compatible /v1/chat/completions endpoint.
-    url = "http://localhost:8000/v1/chat/completions"
+    # Look up the port for the specified model
+    port = PORT_MAPPING.get(model_name, 8000)
+    url = f"http://localhost:{port}/v1/chat/completions"
     payload = {
         "model": model_name,
         "messages": [{"role": "user", "content": prompt}]
@@ -91,7 +100,8 @@ def call_generation_model(model_name: str, prompt: str) -> Dict[str, Any]:
 @retry(stop=stop_after_attempt(3))
 def _call_arbitrator_api(prompt: str, model_answer: str) -> Dict[str, Any]:
     # Assumption: The local server provides an OpenAI-compatible endpoint.
-    url = "http://localhost:8000/v1/chat/completions"
+    port = PORT_MAPPING.get("Phi", 8003)
+    url = f"http://localhost:{port}/v1/chat/completions"
     arbitrator_prompt = f"Evaluate the following answer to the prompt. Provide a score from 1.0 to 5.0 and reasoning.\nPrompt: {prompt}\nAnswer: {model_answer}"
     payload = {
         "model": "Phi",
