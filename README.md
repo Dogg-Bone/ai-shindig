@@ -10,7 +10,7 @@ The `pipeline.py` script routes requests to the correct model server based on th
 - **Qwen** (`Qwen/Qwen2.5-3B-Instruct`): Port 8000
 - **Llama** (`meta-llama/Llama-3.2-3B-Instruct`): Port 8001
 - **Mistral** (`mistralai/Mistral-7B-Instruct-v0.2`): Port 8002
-- **Phi** (`nvidia/Phi-4-reasoning-plus-NVFP4`): Port 8003
+- **Phi** (`microsoft/phi-4`): Port 8003
 
 ## How to Run
 
