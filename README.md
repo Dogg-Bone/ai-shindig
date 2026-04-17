@@ -9,7 +9,7 @@ To manage VRAM efficiently and allow independent scaling, this system uses a **m
 The `pipeline.py` script routes requests to the correct model server based on the following port mapping:
 - **Qwen** (`Qwen/Qwen2.5-3B-Instruct`): Port 8000
 - **Llama** (`meta-llama/Llama-3.2-3B-Instruct`): Port 8001
-- **Mistral** (`mistralai/Ministral-3-3B-Instruct-2512-BF16`): Port 8002
+- **Mistral** (`mistralai/Mistral-7B-Instruct-v0.2`): Port 8002
 - **Phi** (`nvidia/Phi-4-reasoning-plus-NVFP4`): Port 8003
 
 ## How to Run
