@@ -2,6 +2,7 @@ import time
 import logging
 import sys
 import json
+import re
 from typing import List, Dict, Any
 import chromadb
 from pydantic import BaseModel, Field, ValidationError
@@ -135,6 +136,8 @@ def call_arbitrator_phi(prompt: str, model_responses: List[Dict[str, Any]]) -> L
             if "Score:" in content:
                 try:
                     score_str = content.split("Score:")[1].split()[0].strip()
+                    # Remove markdown asterisks or other non-numeric formatting
+                    score_str = re.sub(r'[^\d.]', '', score_str)
                     score = float(score_str)
                 except Exception as e:
                     logger.warning(f"Could not parse score from Phi response: {e}")
