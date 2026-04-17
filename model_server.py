@@ -16,8 +16,8 @@ tokenizer = None
 MODEL_MAPPING = {
     "Qwen": "Qwen/Qwen2.5-3B-Instruct",
     "Llama": "meta-llama/Llama-3.2-3B-Instruct",
-    "Mistral": "mistralai/Ministral-3-3B-Instruct-2512-BF16",
-    "Phi": "nvidia/Phi-4-reasoning-plus-NVFP4"
+    "Mistral": "mistralai/Mistral-7B-Instruct-v0.2",
+    "Phi": "microsoft/phi-4"
 }
 
 # 2. Create the lifespan context manager
