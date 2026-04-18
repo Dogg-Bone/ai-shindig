@@ -103,7 +103,22 @@ def _call_arbitrator_api(prompt: str, model_answer: str) -> Dict[str, Any]:
     # Assumption: The local server provides an OpenAI-compatible endpoint.
     port = PORT_MAPPING.get("Phi", 8003)
     url = f"http://localhost:{port}/v1/chat/completions"
-    arbitrator_prompt = f"Evaluate the following answer to the prompt. Provide a score from 1.0 to 5.0 and reasoning.\nPrompt: {prompt}\nAnswer: {model_answer}"
+
+    arbitrator_prompt = f"""You are a strict, impartial judge evaluating a model's response.
+Evaluate the answer based strictly on the following two criteria, in order of importance:
+1. Faithfulness: Is the answer derived *only* from the System Context provided in the Prompt? Any hallucinations or inclusion of outside knowledge should be severely penalized.
+2. Relevance: Does the answer directly and accurately address the User Question?
+
+Provide a score from 1.0 to 5.0. You must output the result in exactly the following format:
+Score: <your float score here>
+Reasoning: <your reasoning here>
+
+Prompt (includes Context and Question):
+{prompt}
+
+Answer to Evaluate:
+{model_answer}"""
+
     payload = {
         "model": "Phi",
         "messages": [{"role": "user", "content": arbitrator_prompt}]
