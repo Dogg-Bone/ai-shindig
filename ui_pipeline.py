@@ -69,4 +69,4 @@ with gr.Blocks(title="Multi-Agent RAG Pipeline") as demo:
     clear.click(lambda: ([], "Sources and processing time will appear here."), None, [chatbot, details_panel])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0")
+    demo.launch(server_name="0.0.0.0", share=True)
