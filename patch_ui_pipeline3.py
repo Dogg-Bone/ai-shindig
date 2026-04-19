@@ -1,10 +1,7 @@
-import gradio as gr
-from pipeline import run_pipeline
-import logging
+with open("ui_pipeline.py", "r") as f:
+    content = f.read()
 
-logger = logging.getLogger('rag_pipeline')
-
-def chat_interface(message, history):
+search_str = """def chat_interface(message, history):
     # We need to return the new history and the details panel content
 
     try:
@@ -17,16 +14,16 @@ def chat_interface(message, history):
         output = result["output"]
         answer = output.answer
 
-        details = f"**Processing Time:** {output.processing_time_ms} ms\n\n**Sources:**\n"
+        details = f"**Processing Time:** {output.processing_time_ms} ms\\n\\n**Sources:**\\n"
         for source in output.sources:
-            details += f"- {source}\n"
+            details += f"- {source}\\n"
 
         return history + [{"role": "user", "content": message}, {"role": "assistant", "content": answer}], details
 
     elif result["status"] == "skipped_due_to_low_relevance":
         answer = "I couldn't find sufficiently relevant information to answer your question. Please review the retrieved documents in the details panel."
 
-        details = "**POLICY ENFORCEMENT: LOW RELEVANCE**\n\nThe system did not find sufficiently relevant information. Here are the top retrieved documents:\n\n"
+        details = "**POLICY ENFORCEMENT: LOW RELEVANCE**\\n\\nThe system did not find sufficiently relevant information. Here are the top retrieved documents:\\n\\n"
 
         # We expect pipeline.py to return docs, metadatas, and scores.
         docs = result.get("docs", [])
@@ -40,10 +37,10 @@ def chat_interface(message, history):
             page = meta.get('page', 'Unknown')
             paragraph = meta.get('paragraph', 'Unknown')
 
-            details += f"**--- Document {i+1} ---**\n"
-            details += f"**Citation:** [{source_info}, Page {page}, Paragraph {paragraph}]\n"
-            details += f"**Relevance Score:** {score:.2f}\n"
-            details += f"**Content:** {doc}\n\n"
+            details += f"**--- Document {i+1} ---**\\n"
+            details += f"**Citation:** [{source_info}, Page {page}, Paragraph {paragraph}]\\n"
+            details += f"**Relevance Score:** {score:.2f}\\n"
+            details += f"**Content:** {doc}\\n\\n"
 
         return history + [{"role": "user", "content": message}, {"role": "assistant", "content": answer}], details
     else:
@@ -55,18 +52,6 @@ with gr.Blocks(title="Multi-Agent RAG Pipeline") as demo:
     with gr.Row():
         with gr.Column(scale=2):
             chatbot = gr.Chatbot(label="Chat", height=600, type="messages")
-            msg = gr.Textbox(label="Your Question", placeholder="Enter your question here...")
-            clear = gr.Button("Clear Chat")
-        with gr.Column(scale=1):
-            details_panel = gr.Markdown(label="Details", value="Sources and processing time will appear here.")
+            msg = gr.Textbox(label="Your Question", placeholder="Enter your question here...")"""
 
-    def user_input(user_message, chat_history):
-        # Return updated history and details
-        updated_history, details = chat_interface(user_message, chat_history)
-        return "", updated_history, details
-
-    msg.submit(user_input, [msg, chatbot], [msg, chatbot, details_panel])
-    clear.click(lambda: ([], "Sources and processing time will appear here."), None, [chatbot, details_panel])
-
-if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0")
+# First read and check what is actually there because we previously used tuple format!
