@@ -54,7 +54,7 @@ with gr.Blocks(title="Multi-Agent RAG Pipeline") as demo:
 
     with gr.Row():
         with gr.Column(scale=2):
-            chatbot = gr.Chatbot(label="Chat", height=600, type="messages")
+            chatbot = gr.Chatbot(label="Chat", height=600)
             msg = gr.Textbox(label="Your Question", placeholder="Enter your question here...")
             clear = gr.Button("Clear Chat")
         with gr.Column(scale=1):
