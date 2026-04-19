@@ -231,7 +231,7 @@ def execute_models_and_arbitrate(prompt: str, metadatas: List[Dict[str, Any]], s
 # ==========================================
 # Main RAG Pipeline
 # ==========================================
-def run_pipeline(raw_input: dict, db_path: str = "./my_chromadb") -> Dict[str, Any]:
+def run_pipeline(raw_input: dict, db_path: str = "./my_chroma_db") -> Dict[str, Any]:
     start_total_time = time.time()
     
     # Connect to database

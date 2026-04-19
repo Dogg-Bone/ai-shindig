@@ -49,8 +49,8 @@ def chat_interface(message, history):
     else:
         return history + [{"role": "user", "content": message}, {"role": "assistant", "content": "Unknown status returned from pipeline."}], "No details available."
 
-with gr.Blocks(title="Multi-Agent RAG Pipeline") as demo:
-    gr.Markdown("# Multi-Agent RAG Pipeline Chat")
+with gr.Blocks(title="Reality TV RAG") as demo:
+    gr.Markdown("# Reality TV RAG Chat")
 
     with gr.Row():
         with gr.Column(scale=2):
