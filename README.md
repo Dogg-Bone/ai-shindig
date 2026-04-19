@@ -50,7 +50,23 @@ To run the interactive web interface, open a new terminal window and run:
 python ui_pipeline.py
 ```
 
-This will start a local Gradio server. Open the provided URL (usually `http://127.0.0.1:7860`) in your web browser to interact with the RAG pipeline using a chat interface.
+This will start a local Gradio server bound to `0.0.0.0`. Open the provided URL (usually `http://127.0.0.1:7860` locally) in your web browser to interact with the RAG pipeline using a chat interface.
+
+##### Accessing over SSH
+If you are running the Gradio interface on a remote machine, you can access it securely using SSH port forwarding.
+1. On your local computer, open a terminal and run the following command to create an SSH tunnel:
+   ```bash
+   ssh -L 7860:localhost:7860 user@<remote-host-ip>
+   ```
+2. Once connected, open your local web browser and go to `http://127.0.0.1:7860`.
+
+##### Accessing over the Local Network
+If you are on the same network as the host machine, you can connect directly via its IP address:
+1. Find the host's IP address:
+   - **Linux/macOS:** Run `hostname -I` or `ifconfig`.
+   - **Windows:** Run `ipconfig` and look for the IPv4 Address.
+2. In your web browser, navigate to `http://<host-ip>:7860`.
+*(Note: You may need to configure the host machine's firewall to allow traffic on port 7860).*
 
 #### Option B: Command Line Interface (CLI)
 Once all the necessary model servers are running, open a new terminal window and run the main pipeline program. You may optionally provide a path to your ChromaDB instance as an argument.
