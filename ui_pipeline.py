@@ -11,7 +11,7 @@ def chat_interface(message, history):
         result = run_pipeline({"question": message})
     except Exception as e:
         logger.error(f"Error during run_pipeline: {e}")
-        return history + [(message, f"An error occurred: {str(e)}")], "Error generating details."
+        return history + [{"role": "user", "content": message}, {"role": "assistant", "content": f"An error occurred: {str(e)}"}], "Error generating details."
 
     if result["status"] == "success":
         output = result["output"]
@@ -21,7 +21,7 @@ def chat_interface(message, history):
         for source in output.sources:
             details += f"- {source}\n"
 
-        return history + [(message, answer)], details
+        return history + [{"role": "user", "content": message}, {"role": "assistant", "content": answer}], details
 
     elif result["status"] == "skipped_due_to_low_relevance":
         answer = "I couldn't find sufficiently relevant information to answer your question. Please review the retrieved documents in the details panel."
@@ -45,9 +45,9 @@ def chat_interface(message, history):
             details += f"**Relevance Score:** {score:.2f}\n"
             details += f"**Content:** {doc}\n\n"
 
-        return history + [(message, answer)], details
+        return history + [{"role": "user", "content": message}, {"role": "assistant", "content": answer}], details
     else:
-        return history + [(message, "Unknown status returned from pipeline.")], "No details available."
+        return history + [{"role": "user", "content": message}, {"role": "assistant", "content": "Unknown status returned from pipeline."}], "No details available."
 
 with gr.Blocks(title="Multi-Agent RAG Pipeline") as demo:
     gr.Markdown("# Multi-Agent RAG Pipeline Chat")
