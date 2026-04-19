@@ -8,7 +8,7 @@ def chat_interface(message, history):
     # We need to return the new history and the details panel content
 
     try:
-        result = run_pipeline({"question": message})
+        result = run_pipeline({"question": message}, db_path="./my_chroma_db")
     except Exception as e:
         logger.error(f"Error during run_pipeline: {e}")
         return history + [{"role": "user", "content": message}, {"role": "assistant", "content": f"An error occurred: {str(e)}"}], "Error generating details."
