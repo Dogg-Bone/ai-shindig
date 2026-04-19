@@ -40,6 +40,19 @@ MODEL_NAME="Phi" uvicorn model_server:app --port 8003
 Wait until all servers indicate they have successfully loaded their models and are accepting connections.
 
 ### Step 2: Run the Pipeline
+
+You have two options for running the pipeline: a Command Line Interface (CLI) or a Gradio Web Interface.
+
+#### Option A: Gradio Web Interface (Recommended)
+To run the interactive web interface, open a new terminal window and run:
+
+```bash
+python ui_pipeline.py
+```
+
+This will start a local Gradio server. Open the provided URL (usually `http://127.0.0.1:7860`) in your web browser to interact with the RAG pipeline using a chat interface.
+
+#### Option B: Command Line Interface (CLI)
 Once all the necessary model servers are running, open a new terminal window and run the main pipeline program. You may optionally provide a path to your ChromaDB instance as an argument.
 
 ```bash

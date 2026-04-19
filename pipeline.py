@@ -294,7 +294,12 @@ def run_pipeline(raw_input: dict, db_path: str = "./my_chromadb") -> Dict[str, A
             print(f"Content: {doc}")
         print("="*50)
         # Exit gracefully
-        return {"status": "skipped_due_to_low_relevance"}
+        return {
+            "status": "skipped_due_to_low_relevance",
+            "docs": retrieved_docs,
+            "metadatas": metadatas,
+            "scores": similarity_scores
+        }
 
     # Assemble Prompt
     # Append mathematical weightings to each chunk
