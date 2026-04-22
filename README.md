@@ -12,6 +12,17 @@ The `pipeline.py` script routes requests to the correct model server based on th
 - **Mistral** (`mistralai/Mistral-7B-Instruct-v0.2`): Port 8002
 - **Phi** (`microsoft/phi-4`): Port 8003
 
+## Document Ingestion
+
+Before running the pipeline, you must ingest the documents to build the ChromaDB database.
+To ingest the documents from the `rome` directory and store them in `my_chroma_db`, run the following command:
+
+```bash
+python database_builder.py --source rome --db my_chroma_db
+```
+
+*Note: Document ingestion must happen prior to pipeline runtime.*
+
 ## How to Run
 
 ### Step 1: Start the Model Servers
