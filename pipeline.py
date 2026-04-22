@@ -189,7 +189,7 @@ def prepare_and_validate_query(raw_query: str) -> str:
     ]
 
     for pattern in malicious_patterns:
-        if re.search(pattern, raw_query):
+        if re.search(pattern, raw_query.lower()):
             logger.warning("Potential prompt injection detected. Halting pipeline.")
             raise ValueError("Your prompt was flagged as malicious.")
 

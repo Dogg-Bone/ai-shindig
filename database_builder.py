@@ -195,6 +195,21 @@ def create_chroma_db_from_txt(source_dir: str, persist_dir: str, collection_name
 
             if content is None:
                 continue # Skip to next file
+        
+        # Check for potential prompt injection or adversarial phrases
+        malicious_patterns = [
+            r"ignore previous instructions",
+            r"system prompt",
+            r"disregard all previous",
+            r"bypass restrictions",
+            r"you are now",
+            r"do anything now"
+        ]
+
+        for pattern in malicious_patterns:
+            if re.search(pattern, content.lower()):
+                logger.warning("Potential prompt injection detected. Halting pipeline.")
+                raise ValueError("Your doc was flagged as malicious.")
 
         # Transformation: clean text
         cleaned_content = clean_text(content)
