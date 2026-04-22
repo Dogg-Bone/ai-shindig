@@ -23,6 +23,11 @@ def chat_interface(message, history):
 
         return history + [{"role": "user", "content": message}, {"role": "assistant", "content": answer}], details
 
+    elif result["status"] == "flagged":
+        answer = result["message"]
+        details = "**POLICY ENFORCEMENT: MALICIOUS INPUT**\n\nThe system flagged the input as potentially malicious."
+        return history + [{"role": "user", "content": message}, {"role": "assistant", "content": answer}], details
+
     elif result["status"] == "skipped_due_to_low_relevance":
         answer = "I couldn't find sufficiently relevant information to answer your question. Please review the retrieved documents in the details panel."
 
