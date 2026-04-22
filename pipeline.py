@@ -178,6 +178,21 @@ from database_builder import clean_text, has_exotic_characters, strip_exotic_cha
 
 def prepare_and_validate_query(raw_query: str) -> str:
     """Applies the same cleaning and validation to the query as the ingestion phase."""
+    # Check for potential prompt injection or adversarial phrases
+    malicious_patterns = [
+        r"ignore previous instructions",
+        r"system prompt",
+        r"disregard all previous",
+        r"bypass restrictions",
+        r"you are now",
+        r"do anything now"
+    ]
+
+    for pattern in malicious_patterns:
+        if re.search(pattern, raw_query):
+            logger.warning("Potential prompt injection detected. Halting pipeline.")
+            raise ValueError("Your prompt was flagged as malicious.")
+
     if has_exotic_characters(raw_query):
         logger.warning("Query contains exotic characters. Attempting to strip.")
         raw_query = strip_exotic_characters(raw_query)
@@ -251,7 +266,10 @@ def run_pipeline(raw_input: dict, db_path: str = "./my_chroma_db") -> Dict[str, 
         raise ValueError(f"Invalid input schema: {e}")
 
     # Phase 2: Intake and Prompt Preparation
-    cleaned_query = prepare_and_validate_query(validated_input.question)
+    try:
+        cleaned_query = prepare_and_validate_query(validated_input.question)
+    except ValueError as e:
+        return {"status": "flagged", "message": str(e)}
 
     logger.info("Transforming query into vector representation and retrieving context...")
     retrieval_start = time.time()
@@ -348,6 +366,8 @@ if __name__ == "__main__":
 
             if result["status"] == "success":
                 result["output"].print()
+            elif result["status"] == "flagged":
+                print(f"\nFinal Answer: {result['message']}\n")
 
         except KeyboardInterrupt:
             break
